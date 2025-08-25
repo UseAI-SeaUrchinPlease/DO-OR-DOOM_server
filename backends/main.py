@@ -4,6 +4,8 @@ import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
+from transJson import format_tasks_from_json, _get_content_from_response 
+
 
 load_dotenv()
 
@@ -23,10 +25,27 @@ app.add_middleware(
 CHAT_AI_API_KEY = os.getenv("CHAT_AI_API_KEY") # APIキー
 # MODEL_NAME = os.getenv("MODEL_NAME") # モデル名
 
+# プロンプトを設定
+DIALY_SYSTEM_PROMPT_NEGATIVE = "# 命令 " \
+" - あなたは物語の作家です" \
+" - キチンとわかりやすい表現で、かつ、作家としてのプライドを持ち、ユーモアを込めて執筆してくささい" \
+" - 文章はuserから受け取る「# タスク」を参照して、それらのタスクを達成できなかったときの様子を執筆してください" \
+" - 文章の量は200文字前後にしてください" \
+" - 返答はその文章のみとしてください" \
+" - この文章について説明文は含まないでください" \
+
+DIALY_SYSTEM_PROMPT_POSITIVE = "# 命令 " \
+" - あなたは物語の作家です" \
+" - キチンとわかりやすい表現で、かつ、作家としてのプライドを持ち、ユーモアを込めて執筆してくささい" \
+" - 文章はuserから受け取る「# タスク」を参照して、それらのタスクを達成したときの様子を執筆してください" \
+" - 文章の量は200文字前後にしてください" \
+" - 返答はその文章のみとしてください" \
+" - この文章について説明文は含まないでください" \
+
 @app.post("/dialy")
 async def chat(request: Request):
     body = await request.json()
-    messages = body.get("messages", [])
+    tasks = format_tasks_from_json(body)
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
@@ -37,24 +56,54 @@ async def chat(request: Request):
             },
             json={
                 "model": "cotomi2-pro",
-                "messages": messages
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": DIALY_SYSTEM_PROMPT_POSITIVE
+                    },
+                    {
+                        "role": "user",
+                        "content": tasks
+                    }
+                ]
             },
+            timeout=30.0 # 結構長考タイプのcotomiのためのタイムアウト設定
         )
     
-    data = response.json()
+    pos_data = response.json()
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://api.aipf.sakura.ad.jp/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {CHAT_AI_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "cotomi2-pro",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": DIALY_SYSTEM_PROMPT_NEGATIVE
+                    },
+                    {
+                        "role": "user",
+                        "content": tasks
+                    }
+                ]
+            },
+            timeout=30.0 # 結構長考タイプのcotomiのためのタイムアウト設定
+        )
+        
+    neg_data = response.json()
 
     # choices -> message -> content を安全に取り出して返す
-    assistant = None
-    choices = data.get("choices")
-    if isinstance(choices, list) and len(choices) > 0:
-        first = choices[0]
-        if isinstance(first, dict):
-            msg = first.get("message")
-            if isinstance(msg, dict):
-                assistant = msg.get("content")
+    dialies = None
+    pos_dialy = _get_content_from_response(pos_data)
+    neg_dialy = _get_content_from_response(neg_data)
+    dialies = {
+        "positive": pos_dialy.get("reply"),
+        "negative": neg_dialy.get("reply"),
+    }
 
-    if assistant is None:
-        # 取り出せなければ元のdataをそのまま返す（デバッグ用）
-        assistant = data
-
-    return {"reply": assistant}
+    return dialies
