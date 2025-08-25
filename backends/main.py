@@ -1,10 +1,13 @@
 from fastapi import FastAPI, Request
 import httpx
 import os
+import io
+import base64
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
 from transJson import format_tasks_from_json, _get_content_from_response 
+from SDImage import get_image_by_SD
 
 
 load_dotenv()
@@ -24,6 +27,8 @@ app.add_middleware(
 # CHAT_AI_ENDPOINT = os.getenv("CHAT_AI_ENDPOINT") # APIエンドポイント
 CHAT_AI_API_KEY = os.getenv("CHAT_AI_API_KEY") # APIキー
 # MODEL_NAME = os.getenv("MODEL_NAME") # モデル名
+
+#### 日記生成API ####
 
 # プロンプトを設定
 DIALY_SYSTEM_PROMPT_NEGATIVE = "# 命令 " \
@@ -99,11 +104,99 @@ async def chat(request: Request):
 
     # choices -> message -> content を安全に取り出して返す
     dialies = None
-    pos_dialy = _get_content_from_response(pos_data)
-    neg_dialy = _get_content_from_response(neg_data)
+    pos_text = _get_content_from_response(pos_data).get("reply")
+    neg_text = _get_content_from_response(neg_data).get("reply")
+
+    ### 画像生成API呼び出し ###
+    pos_image = None
+    neg_image = None
+
+    
+    # プロンプトを設定
+    DIALY_SYSTEM_PROMPT_IMAGE = "# 命令 " \
+    " - あなたはプロンプトチューニングの専門家です" \
+    " - stable diffusion が目的に沿った画像を生成できる様に、シンプルであるほど良いとされています" \
+    " - 生成するプロンプトはuser から送られる「# 原文」の内容に合わせて次の「# コアプロンプト」「# スタイル」の２つをそれぞれ次にあげる内容に従って考えてください" \
+    "# コアプロンプト" \
+    " - コアプロンプトとは、主に画像の中心に位置する被写体や中心的なテーマ、主題を指します。タスクにあるものを上げるといいでしょう" \
+    "# スタイル" \
+    " - 画風を決めます。文章に表された質感を表せるように、かつシンプルな単語にしてください" \
+
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://api.aipf.sakura.ad.jp/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {CHAT_AI_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "cotomi2-pro",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": DIALY_SYSTEM_PROMPT_IMAGE
+                    },
+                    {
+                        "role": "user",
+                        "content": ("「# 原文」" + pos_text)
+                    }
+                ]
+            },
+            timeout=30.0 # 結構長考タイプのcotomiのためのタイムアウト設定
+        )
+        
+    pos_prompt = _get_content_from_response(response.json()).get("reply")
+
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://api.aipf.sakura.ad.jp/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {CHAT_AI_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "cotomi2-pro",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": DIALY_SYSTEM_PROMPT_IMAGE
+                    },
+                    {
+                        "role": "user",
+                        "content": ("「# 原文」" + neg_text)
+                    }
+                ]
+            },
+            timeout=30.0 # 結構長考タイプのcotomiのためのタイムアウト設定
+        )
+        
+    neg_prompt = _get_content_from_response(response.json()).get("reply")
+
+    # 画像を生成
+    pos_image = get_image_by_SD(pos_prompt)
+    neg_image = get_image_by_SD(neg_prompt)
+
+    # PIL ImageをBase64に変換
+    pos_image_buffer = io.BytesIO()
+    neg_image_buffer = io.BytesIO()
+    pos_image.save(pos_image_buffer, format='PNG')
+    neg_image.save(neg_image_buffer, format='PNG')
+    pos_image_base64 = base64.b64encode(pos_image_buffer.getvalue()).decode('utf-8')
+    neg_image_base64 = base64.b64encode(neg_image_buffer.getvalue()).decode('utf-8')
+
     dialies = {
-        "positive": pos_dialy.get("reply"),
-        "negative": neg_dialy.get("reply"),
+        "positive": {
+            "text": pos_text,
+            "image": pos_image_base64,
+        },
+        "negative": {
+            "text": neg_text,
+            "image": neg_image_base64,
+        }
     }
+
+
 
     return dialies
