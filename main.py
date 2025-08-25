@@ -14,6 +14,11 @@ load_dotenv()
 
 app = FastAPI()
 
+@app.get("/")
+def health_check():
+    """Renderのヘルスチェックに応答するためのエンドポイント"""
+    return {"status": "ok"}
+
 # CORS設定（開発中のみ全て許可、本番では適切に設定すること）
 app.add_middleware(
     CORSMiddleware,
