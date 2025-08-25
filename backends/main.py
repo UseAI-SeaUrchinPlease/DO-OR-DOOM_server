@@ -28,6 +28,22 @@ app.add_middleware(
 CHAT_AI_API_KEY = os.getenv("CHAT_AI_API_KEY") # APIキー
 # MODEL_NAME = os.getenv("MODEL_NAME") # モデル名
 
+# グローバル変数としてbase_urlを定義
+base_url = None
+
+@app.post("/set-sdserver")
+async def set_sd_server(request: Request):
+    global base_url
+    body = await request.json()
+    new_url = body.get("url")
+    
+    if not new_url:
+        return {"status": "error", "message": "URLが指定されていません"}
+    
+    base_url = new_url
+    return {"status": "success", "message": f"Stable Diffusion サーバーのURLを {base_url} に設定しました"}
+
+
 #### 日記生成API ####
 
 # プロンプトを設定
@@ -175,8 +191,8 @@ async def chat(request: Request):
     neg_prompt = _get_content_from_response(response.json()).get("reply")
 
     # 画像を生成
-    pos_image = get_image_by_SD(pos_prompt)
-    neg_image = get_image_by_SD(neg_prompt)
+    pos_image = get_image_by_SD(pos_prompt, base_url)
+    neg_image = get_image_by_SD(neg_prompt, base_url)
 
     # PIL ImageをBase64に変換
     pos_image_buffer = io.BytesIO()

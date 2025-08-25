@@ -4,11 +4,14 @@ import base64
 from PIL import Image
 import io
 
-BASE_URL = "https://9a755e97b8550f9e67.gradio.live"
-TXT2IMG_URL = f"{BASE_URL}/sdapi/v1/txt2img"
+# BASE_URL = "https://9a755e97b8550f9e67.gradio.live"
+# TXT2IMG_URL = f"{BASE_URL}/sdapi/v1/txt2img"
 
 
-def get_image_by_SD(prompt):
+def get_image_by_SD(prompt, base_url):
+    
+    txt2img_url = f"{base_url}/sdapi/v1/txt2img"
+
     payload = {
         "prompt": prompt,
         "negative_prompt": "",
@@ -21,7 +24,7 @@ def get_image_by_SD(prompt):
     # 3. APIにPOSTリクエストを送信
     try:
         print("画像生成リクエストを送信します...")
-        response = requests.post(url=TXT2IMG_URL, json=payload)
+        response = requests.post(url=txt2img_url, json=payload)
         response.raise_for_status() 
         r = response.json()
         # 4. レスポンスから画像データを取得して保存
