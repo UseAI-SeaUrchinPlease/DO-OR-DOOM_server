@@ -1,0 +1,21 @@
+{
+	"mode" : "today-tasks",
+	"tasks" : [
+		{
+			"id" : 0,
+			"contents" : "腕立て伏せ100回"
+		},
+		{
+			"id" : 1,
+			"contents" : "上体起こし100回"
+		},
+		{
+			"id" : 2,
+			"contents" : "スクワット100回"
+		},
+		{
+			"id" : 3,
+			"contents" : "ランニング10km"
+		}
+	]
+}

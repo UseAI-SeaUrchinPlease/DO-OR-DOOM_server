@@ -23,10 +23,15 @@ app.add_middleware(
 CHAT_AI_API_KEY = os.getenv("CHAT_AI_API_KEY") # APIキー
 # MODEL_NAME = os.getenv("MODEL_NAME") # モデル名
 
-@app.post("/dialy")
+@app.post("/chat")
 async def chat(request: Request):
     body = await request.json()
     messages = body.get("messages", [])
+
+    # --- ▼▼▼ デバッグ用にこの2行を追加 ▼▼▼ ---
+    print("--- クライアントから受信したデータ ---")
+    print(body)
+    # --- ▲▲▲ ここまで ---
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
@@ -39,6 +44,7 @@ async def chat(request: Request):
                 "model": "cotomi2-pro",
                 "messages": messages
             },
+            timeout=30.0 # 結構長考タイプのcotomiのためのタイムアウト設定
         )
     
     data = response.json()
