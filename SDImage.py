@@ -13,7 +13,7 @@ STABILITY_API_KEY = os.getenv("STABILITY_API_KEY") # APIキー
 
 def get_image_by_SD(prompt):
     
-    txt2img_url = f"https://api.stability.ai/v2alpha/generation/stable-image/upscale"
+    txt2img_url = f"https://api.stability.ai/v2beta/stable-image/generate/ultra"
     params = {
         "prompt" : prompt,
         "negative_prompt" : "",
