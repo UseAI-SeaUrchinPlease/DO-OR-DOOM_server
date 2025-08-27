@@ -196,8 +196,8 @@ async def chat(request: Request):
     neg_prompt = _get_content_from_response(response.json()).get("reply")
 
     # 画像を生成
-    pos_image = get_image_by_SD(pos_prompt, base_url)
-    neg_image = get_image_by_SD(neg_prompt, base_url)
+    pos_image = get_image_by_SD(pos_prompt)
+    neg_image = get_image_by_SD(neg_prompt)
 
     # PIL ImageをBase64に変換
     pos_image_buffer = io.BytesIO()
