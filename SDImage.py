@@ -29,7 +29,30 @@ def get_image_by_SD(prompt):
             },
             timeout=30.0 
         )
-        image = response.content
-        return image
+        
+        # レスポンスの検証
+        print(f"Content-Type: {response.headers.get('content-type', 'Not specified')}")
+        print(f"Response status code: {response.status_code}")
+        
+        try:
+            # JSONとして解析を試みる
+            json_data = response.json()
+            print("レスポンスはJSON形式です:")
+            print(json.dumps(json_data, indent=2, ensure_ascii=False))
+            return json_data
+        except json.JSONDecodeError:
+            # バイナリデータとして処理
+            content = response.content
+            print(f"レスポンスはバイナリデータです:")
+            print(f"データ長: {len(content)} bytes")
+            print(f"データ型: {type(content)}")
+            
+            # 先頭数バイトを16進数で表示
+            print("データの先頭20バイト:")
+            print(content[:20].hex())
+            
+            return content
+            
     except requests.exceptions.RequestException as e:
         print(f"APIへのリクエスト中にエラーが発生しました: {e}")
+        return None
