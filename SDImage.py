@@ -29,32 +29,7 @@ def get_image_by_SD(prompt):
             },
             timeout=30.0 
         )
-        response.raise_for_status() 
-        r = response.json()
-        # 4. レスポンスから画像データを取得して保存
-        if 'images' in r and len(r['images']) > 0:
-            image_data = r['images'][0]
-            # Base64デコード前にデータの形式を確認
-            if isinstance(image_data, str):
-                # Base64文字列から余分なヘッダー部分を除去
-                if ',' in image_data:
-                    base64_data = image_data.split(',')[1]
-                else:
-                    base64_data = image_data
-                
-                try:
-                    # Base64デコード
-                    image_bytes = base64.b64decode(base64_data)
-                    image = Image.open(io.BytesIO(image_bytes))
-                    print("画像生成が完了しました。")
-                    return image
-                except base64.binascii.Error as e:
-                    print(f"Base64デコードエラー: {e}")
-                    return None
-            else:
-                print(f"予期しない画像データ形式: {type(image_data)}")
-                return None
-        else:
-            print("エラー: レスポンスに画像データが含まれていませんでした。")
+        image = response.content
+        return image
     except requests.exceptions.RequestException as e:
         print(f"APIへのリクエスト中にエラーが発生しました: {e}")
