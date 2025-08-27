@@ -3,6 +3,7 @@ import httpx
 import os
 import io
 import base64
+import re
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -129,8 +130,8 @@ async def chat(request: Request):
     neg_text = _get_content_from_response(neg_data).get("reply")
 
     ### 画像生成API呼び出し ###
-    pos_image = None
-    neg_image = None
+    pos_image_base64 = None
+    neg_image_base64 = None
 
     
     # プロンプトを設定
@@ -142,62 +143,17 @@ async def chat(request: Request):
     " - コアプロンプトとは、主に画像の中心に位置する被写体や中心的なテーマ、主題を指します。タスクにあるものを上げるといいでしょう" \
     "# スタイル" \
     " - 画風を決めます。文章に表された質感を表せるように、かつシンプルな単語にしてください" \
-    "作成するプロンプトは、絶対に英語にしてください" \
+    "作成するプロンプトは、絶対に英語のみにし、その他の言語は絶対に含まないでください" \
     "プロンプトに関しての説明は含まないでください" \
     "生成するプロンプトに「#コアプロンプト」や「#スタイル」などに分けず、英語の単語の羅列のみにしてください" \
-
     
     async with httpx.AsyncClient() as client:
-        response = await client.post(
-            "https://api.aipf.sakura.ad.jp/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {CHAT_AI_API_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "cotomi2-pro",
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": DIALY_SYSTEM_PROMPT_IMAGE
-                    },
-                    {
-                        "role": "user",
-                        "content": ("「# 原文」" + pos_text)
-                    }
-                ]
-            },
-            timeout=30.0 # 結構長考タイプのcotomiのためのタイムアウト設定
-        )
-        
-    pos_prompt = _get_content_from_response(response.json()).get("reply")
-    print("Positive Prompt:", pos_prompt)
-
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            "https://api.aipf.sakura.ad.jp/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {CHAT_AI_API_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "cotomi2-pro",
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": DIALY_SYSTEM_PROMPT_IMAGE
-                    },
-                    {
-                        "role": "user",
-                        "content": ("「# 原文」" + neg_text)
-                    }
-                ]
-            },
-            timeout=30.0 # 結構長考タイプのcotomiのためのタイムアウト設定
-        )
-        
-    neg_prompt = _get_content_from_response(response.json()).get("reply")
-    print("Negative Prompt:", neg_prompt)
+        pos_prompt = await generate_prompt(client, DIALY_SYSTEM_PROMPT_IMAGE, pos_text)
+        print("Positive Prompt:", pos_prompt)
+    
+        neg_prompt = await generate_prompt(client, DIALY_SYSTEM_PROMPT_IMAGE, neg_text)
+        print("Negative Prompt:", neg_prompt)
+    
     # 画像を生成
     pos_image_base64 = get_image_by_SD(pos_prompt)
     neg_image_base64 = get_image_by_SD(neg_prompt)
@@ -220,7 +176,42 @@ async def chat(request: Request):
             "image": neg_image_base64,
         }
     }
-
-
-
     return dialies
+# 英語チェック関数を追加
+def is_english_only(text):
+    # 英数字、スペース、カンマ、ピリオドのみを許可
+    return bool(re.match('^[a-zA-Z0-9\s,\.]+$', text))
+
+# プロンプト生成関数を追加
+async def generate_prompt(client, system_prompt, text, max_retries=3):
+    for attempt in range(max_retries):
+        response = await client.post(
+            "https://api.aipf.sakura.ad.jp/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {CHAT_AI_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "cotomi2-pro",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": system_prompt
+                    },
+                    {
+                        "role": "user",
+                        "content": ("「# 原文」" + text)
+                    }
+                ]
+            },
+            timeout=30.0
+        )
+        
+        prompt = _get_content_from_response(response.json()).get("reply")
+        if is_english_only(prompt):
+            return prompt
+        print(f"非英語文字を検出。リトライ {attempt + 1}/{max_retries}")
+    
+    # 全てのリトライが失敗した場合、デフォルトの英語プロンプトを返す
+    return "person standing nature simple photo"
+
