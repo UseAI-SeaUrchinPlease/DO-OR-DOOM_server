@@ -196,7 +196,7 @@ async def chat(request: Request):
             timeout=30.0 # 結構長考タイプのcotomiのためのタイムアウト設定
         )
         
-    neg_prompt = _get_content_from_response(response.json())#.get("reply")
+    neg_prompt = _get_content_from_response(response.json()).get("reply")
     print("Negative Prompt:", neg_prompt)
     # 画像を生成
     pos_image_base64 = get_image_by_SD(pos_prompt)
