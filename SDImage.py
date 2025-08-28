@@ -87,6 +87,14 @@ def send_async_generation_request(
         files=files,
         data=params
     )
+    response_dict = json.loads(response.text)
+
+    # --- デバッグのためのコードを追加 ---
+    import json
+    print("--- APIからの完全な応答 ---")
+    print(json.dumps(response_dict, indent=2, ensure_ascii=False))
+    print("---------------------------")
+    # --------------------------------
     if not response.ok:
         raise Exception(f"HTTP {response.status_code}: {response.text}")
 
