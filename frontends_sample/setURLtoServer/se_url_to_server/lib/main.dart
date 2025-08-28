@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+const server_url =
+    'https://do-or-doom-server.onrender.com/set-sdserver'; // ここを適切なURLに変更
+
 void main() {
   runApp(const MainApp());
 }
@@ -32,7 +35,7 @@ class _URLInputScreenState extends State<URLInputScreen> {
   Future<void> _sendURL() async {
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:8000/set-sdserver'),
+        Uri.parse(server_url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'url': _urlController.text}),
       );

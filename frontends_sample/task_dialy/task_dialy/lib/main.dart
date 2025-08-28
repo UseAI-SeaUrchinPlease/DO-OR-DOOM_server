@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+const server_url =
+    'https://do-or-doom-server-1.onrender.com/dialy'; // ここを適切なURLに変更
+
 void main() {
   runApp(const MyApp());
 }
@@ -61,7 +64,7 @@ class _TaskScreenState extends State<TaskScreen> {
       "tasks": _tasks,
     };
 
-    final url = Uri.parse('http://localhost:8000/dialy'); // Dockerで動いているAPIのURL
+    final url = Uri.parse(server_url); // Dockerで動いているAPIのURL
 
     // ▼▼▼ 変更点3：応答をsetStateで変数に保存する処理を追加 ▼▼▼
     try {
