@@ -155,9 +155,12 @@ async def chat(request: Request):
     async with httpx.AsyncClient() as client:
         pos_prompt = await generate_prompt(client, DIALY_SYSTEM_PROMPT_IMAGE, pos_text)
         print("Positive Prompt:", pos_prompt)
-    
+        
         neg_prompt = await generate_prompt(client, DIALY_SYSTEM_PROMPT_IMAGE, neg_text)
         print("Negative Prompt:", neg_prompt)
+
+        pos_prompt += ", positive"
+        neg_prompt += ", negative"
     
     # 画像を生成
     pos_image_base64 = get_image_by_SD(pos_prompt)
