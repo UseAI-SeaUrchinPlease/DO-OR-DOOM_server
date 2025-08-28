@@ -37,7 +37,7 @@ def get_image_by_SD(prompt):
             json_data = response.json()
             print("レスポンスはJSON形式です:")
             print(json.dumps(json_data, indent=2, ensure_ascii=False))
-            return json_data
+            return json_data.get("image", [None])  # 例として最初の画像を返す
         except json.JSONDecodeError:
             # バイナリデータとして処理
             content = response.content
@@ -105,21 +105,20 @@ def send_async_generation_request(
     timeout = int(os.getenv("WORKER_TIMEOUT", 500))
     start = time.time()
     status_code = 202
-    while status_code == 202:
-        print(f"Polling results at https://api.stability.ai/v2beta/results/{generation_id}")
-        response = requests.get(
-            f"https://api.stability.ai/v2beta/results/{generation_id}",
-            headers={
-                **headers,
-                "Accept": "*/*"
-            },
-        )
-
-        if not response.ok:
-            raise Exception(f"HTTP {response.status_code}: {response.text}")
-        status_code = response.status_code
-        time.sleep(10)
-        if time.time() - start > timeout:
-            raise Exception(f"Timeout after {timeout} seconds")
+    # while status_code == 202:
+        # print(f"Polling results at https://api.stability.ai/v2beta/results/{generation_id}")
+        # response = requests.get(
+            # f"https://api.stability.ai/v2beta/results/{generation_id}",
+            # headers={
+                # **headers,
+                # "Accept": "*/*"
+            # },
+        # )
+        # if not response.ok:
+            # raise Exception(f"HTTP {response.status_code}: {response.text}")
+        # status_code = response.status_code
+        # time.sleep(10)
+        # if time.time() - start > timeout:
+            # raise Exception(f"Timeout after {timeout} seconds")
 
     return response
