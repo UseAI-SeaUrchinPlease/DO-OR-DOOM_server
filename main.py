@@ -160,8 +160,8 @@ async def chat(request: Request):
         neg_prompt = await generate_prompt(client, DIALY_SYSTEM_PROMPT_IMAGE, neg_text)
         print("Negative Prompt:", neg_prompt)
 
-        pos_prompt += ", positive"
-        neg_prompt += ", negative"
+        pos_prompt = "positive, active, " + pos_prompt
+        neg_prompt = "negative, inactive, " + neg_prompt
     
     # 画像を生成
     pos_image_base64 = get_image_by_SD(pos_prompt)
