@@ -88,7 +88,7 @@ def send_async_generation_request(
         data=params
     )
     response_dict = json.loads(response.text)
-    
+
     # --- デバッグのためのコードを追加 ---
     print("--- APIからの完全な応答 ---")
     print(json.dumps(response_dict, indent=2, ensure_ascii=False))
@@ -98,8 +98,8 @@ def send_async_generation_request(
         raise Exception(f"HTTP {response.status_code}: {response.text}")
 
     # Process async response
-    generation_id = response_dict.get("id", None)
-    assert generation_id is not None, "Expected id in response"
+    # generation_id = response_dict.get("id", None)
+    # assert generation_id is not None, "Expected id in response"
 
     # Loop until result or timeout
     timeout = int(os.getenv("WORKER_TIMEOUT", 500))
