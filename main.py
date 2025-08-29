@@ -72,8 +72,8 @@ async def make_dialy(request: Request):
     # 画像を生成 (base64形式で返されるので、そのまま)(並列処理)
     # asyncio.gatherで2つのタスクを並列実行し、両方の完了を待つ
     pos_image_base64, neg_image_base64 = await asyncio.gather(
-        get_image_by_SD_async(client, pos_prompt),
-        get_image_by_SD_async(client, neg_prompt)
+        get_image_by_SD_async(pos_prompt),
+        get_image_by_SD_async(neg_prompt)
     )
 
     # レスポンス用の辞書を作成
