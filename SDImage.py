@@ -31,7 +31,7 @@ async def get_image_by_SD(client, prompt: str):
     params = {
         "prompt" : prompt,
         "negative_prompt" : "",
-        "aspect_ratio" : "3:2",
+        "aspect_ratio" : "5:2",
         "output_format": "png"
     }
     
@@ -40,7 +40,6 @@ async def get_image_by_SD(client, prompt: str):
     response = await client.post(
         txt2img_url,
         headers=headers,
-        files=files,
         data=params
     )
     response_dict = json.loads(response.text)
