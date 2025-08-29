@@ -70,8 +70,8 @@ async def make_dialy(request: Request):
         neg_prompt = "negative, inactive, " + neg_prompt
 
     # 画像を生成 (base64形式で返されるので、そのまま)
-    get_image_by_SD(pos_prompt),
-    get_image_by_SD(neg_prompt)
+    pos_image_base64 = get_image_by_SD(pos_prompt),
+    neg_image_base64 = get_image_by_SD(neg_prompt)
 
     # レスポンス用の辞書を作成
     dialies = {
