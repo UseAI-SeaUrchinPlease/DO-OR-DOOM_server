@@ -136,5 +136,5 @@ async def generate_prompt(client, text: str, max_retries=3):
 
 # 英語チェック関数
 def is_english_only(text):
-    # 英数字、スペース、カンマ、ピリオドのみを許可
-    return bool(re.match('^[a-zA-Z0-9\s,\.]+$', text))
+    # 英数字、スペース、カンマ、ピリオド、ハイフンのみを許可
+    return bool(re.match('^[a-zA-Z0-9\s,\.\-]+$', text))
