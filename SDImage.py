@@ -50,8 +50,8 @@ async def get_image_by_SD(client, prompt: str):
     print(json.dumps(response_dict, indent=2, ensure_ascii=False))
     print("---------------------------")
     # --------------------------------
-    if not response.ok:
-        raise Exception(f"HTTP {response.status_code}: {response.text}")
+    # if not response.ok:
+        # raise Exception(f"HTTP {response.status_code}: {response.text}")
 
     # 3. APIにPOSTリクエストを送信
     # try:

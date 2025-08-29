@@ -42,7 +42,8 @@ DIALY_SYSTEM_PROMPT_IMAGE = "# 命令 " \
 "生成するプロンプトは、具体的な「行動」を含めるようにしてください" \
 "作成するプロンプトは、絶対に英語のみにし、その他の言語は絶対に含まないでください" \
 "プロンプトに関しての説明は含まないでください" \
-"生成するプロンプトに「#コアプロンプト」や「#スタイル」などに分けず、英語の単語の羅列のみにしてください" \
+"作成するプロンプトに「#コアプロンプト」や「#スタイル」などに分けず、英語の単語の羅列のみにしてください" \
+"作成するプロンプトに開業なども含まないでください" \
 
 # 日記文章生成関数
 async def make_dialy_sentence(client, tasks: str, positive: bool) -> str:
@@ -125,7 +126,9 @@ async def generate_prompt(client, text: str, max_retries=3):
         prompt = _get_content_from_response(response.json()).get("reply")
         if is_english_only(prompt):
             return prompt
+        print(f"prompt:{prompt}")
         print(f"非英語文字を検出。リトライ {attempt + 1}/{max_retries}")
+        
     
     # 全てのリトライが失敗した場合、デフォルトの英語プロンプトを返す
     return "person standing nature simple photo"
