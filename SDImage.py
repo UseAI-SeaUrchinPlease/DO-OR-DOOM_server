@@ -30,7 +30,7 @@ async def get_image_by_SD(client, prompt: str):
     params = {
         "prompt" : prompt,
         "negative_prompt" : "",
-        "aspect_ratio" : "5:2",
+        "aspect_ratio" : "21:9",
         "output_format": "png"
     }
     
