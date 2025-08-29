@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 const server_url =
-    'https://do-or-doom-server.onrender.com/dialy'; // ここを適切なURLに変更
+    'https://do-or-doom-server.onrender.com/badge'; // ここを適切なURLに変更
 
 void main() {
   runApp(const MyApp());
@@ -34,8 +34,7 @@ class _TaskScreenState extends State<TaskScreen> {
   final TextEditingController _textController = TextEditingController();
 
   // サーバーからのレスポンスを保存する変数
-  Map<String, dynamic>? _positiveResponse;
-  Map<String, dynamic>? _negativeResponse;
+  Map<String, dynamic>? _response;
 
   void _addTask() {
     final String content = _textController.text;
@@ -43,8 +42,7 @@ class _TaskScreenState extends State<TaskScreen> {
       setState(() {
         _tasks.add({"id": _tasks.length, "contents": content});
         // 新しいタスクを追加したら、前の応答はクリアする
-        _positiveResponse = null;
-        _negativeResponse = null;
+        _response = null;
       });
       _textController.clear();
     }
@@ -53,8 +51,7 @@ class _TaskScreenState extends State<TaskScreen> {
   Future<void> _sendTasks() async {
     if (_tasks.isEmpty) {
       setState(() {
-        _positiveResponse = {'text': '送信するタスクがありません。', 'image': null};
-        _negativeResponse = null;
+        _response = {'text': '送信するタスクがありません。', 'image': null};
       });
       return;
     }
@@ -77,26 +74,17 @@ class _TaskScreenState extends State<TaskScreen> {
       if (response.statusCode == 200) {
         final responseData = json.decode(utf8.decode(response.bodyBytes));
         setState(() {
-          _positiveResponse = responseData['positive'];
-          _negativeResponse = responseData['negative'];
+          _response = responseData;
           _tasks.clear(); // 送信成功後、リストをクリア
         });
       } else {
         setState(() {
-          _positiveResponse = {
-            'text': '送信失敗: ${response.statusCode}',
-            'image': null,
-          };
-          _negativeResponse = {
-            'text': 'エラー内容: ${response.body}',
-            'image': null,
-          };
+          _response = {'text': '送信失敗: ${response.statusCode}', 'image': null};
         });
       }
     } catch (e) {
       setState(() {
-        _positiveResponse = {'text': 'エラー: サーバーに接続できませんでした。', 'image': null};
-        _negativeResponse = {'text': '$e', 'image': null};
+        _response = {'text': 'エラー: サーバーに接続できませんでした。', 'image': null};
       });
     }
   }
@@ -114,6 +102,49 @@ class _TaskScreenState extends State<TaskScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
+              // バッジ情報の表示
+              if (_response != null)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12.0),
+                  margin: const EdgeInsets.only(bottom: 20.0),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8.0),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // バッジ名
+                      if (_response!['name'] != null)
+                        Text(
+                          _response!['name'],
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      const SizedBox(height: 12),
+                      // テキスト
+                      if (_response!['text'] != null)
+                        Text(
+                          _response!['text'],
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      const SizedBox(height: 16),
+                      // 画像
+                      if (_response!['image'] != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8.0),
+                          child: Image.memory(
+                            base64Decode(_response!['image']),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               // (入力欄やタスクリストのUIは変更なし)
               Row(
                 children: [
@@ -162,77 +193,6 @@ class _TaskScreenState extends State<TaskScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // タスク達成時の表示
-              if (_positiveResponse != null)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12.0),
-                  margin: const EdgeInsets.only(bottom: 20.0),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(8.0),
-                    border: Border.all(color: Colors.green.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'タスク達成時の様子:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green.shade700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(_positiveResponse!['text']),
-                      const SizedBox(height: 16),
-                      if (_positiveResponse!['image'] != null)
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8.0),
-                          child: Image.memory(
-                            base64Decode(_positiveResponse!['image']),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-
-              // タスク未達成時の表示
-              if (_negativeResponse != null)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12.0),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(8.0),
-                    border: Border.all(color: Colors.red.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'タスク未達成時の様子:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red.shade700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(_negativeResponse!['text']),
-                      const SizedBox(height: 16),
-                      if (_negativeResponse!['image'] != null)
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8.0),
-                          child: Image.memory(
-                            base64Decode(_negativeResponse!['image']),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
             ],
           ),
         ),
