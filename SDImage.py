@@ -1,10 +1,10 @@
 import requests
 import json
-import base64
-from PIL import Image
-import io
 import os
 import time
+import base64
+from io import BytesIO
+from PIL import Image
 
 # BASE_URL = "https://9a755e97b8550f9e67.gradio.live"
 # TXT2IMG_URL = f"{BASE_URL}/sdapi/v1/txt2img"
@@ -37,8 +37,20 @@ def get_image_by_SD(prompt):
             # JSONとして解析を試みる
             json_data = response.json()
             print("レスポンスはJSON形式です:")
-            print(json.dumps(json_data, indent=2, ensure_ascii=False))
-            return json_data.get("image", [None])  # 例として最初の画像を返す
+            # print(json.dumps(json_data, indent=2, ensure_ascii=False))
+
+            base64_image = json_data.get("image", [None])
+            return base64_image
+            # if base64_image:
+                # base64をデコードしてバイトデータに変換
+                # image_bytes = base64.b64decode(base64_image)
+                # BytesIOオブジェクトに変換
+                # image_buffer = BytesIO(image_bytes)
+                # PIL Imageオブジェクトとして開く
+                # pil_image = Image.open(image_buffer)
+                # return pil_image
+            # return None 
+
         except json.JSONDecodeError:
             # バイナリデータとして処理
             content = response.content
@@ -91,9 +103,9 @@ def send_async_generation_request(
     response_dict = json.loads(response.text)
 
     # --- デバッグのためのコードを追加 ---
-    print("--- APIからの完全な応答 ---")
-    print(json.dumps(response_dict, indent=2, ensure_ascii=False))
-    print("---------------------------")
+    # print("--- APIからの完全な応答 ---")
+    # print(json.dumps(response_dict, indent=2, ensure_ascii=False))
+    # print("---------------------------")
     # --------------------------------
     if not response.ok:
         raise Exception(f"HTTP {response.status_code}: {response.text}")
