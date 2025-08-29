@@ -10,9 +10,18 @@ import time
 # TXT2IMG_URL = f"{BASE_URL}/sdapi/v1/txt2img"
 STABILITY_API_KEY = os.getenv("STABILITY_API_KEY") # APIキー
 
-
-def get_image_by_SD(prompt):
     
+
+
+async def get_image_by_SD(client, prompt: str):
+    """Stable Diffusionを使って画像を生成し、base64エンコードされた画像データを返す関数
+    Args:
+        client: httpxの非同期クライアント
+        prompt (str): 画像生成のためのプロンプト
+    Returns:
+        bytes: base64エンコードされた画像データ
+    """
+
     txt2img_url = f"https://api.stability.ai/v2beta/stable-image/generate/ultra"
     params = {
         "prompt" : prompt,
@@ -25,6 +34,7 @@ def get_image_by_SD(prompt):
     try:
         print("画像生成リクエストを送信します...")
         response = send_async_generation_request(
+            client,
             txt2img_url,
             params
         )
@@ -33,35 +43,16 @@ def get_image_by_SD(prompt):
         print(f"Content-Type: {response.headers.get('content-type', 'Not specified')}")
         print(f"Response status code: {response.status_code}")
         
-        try:
-            # JSONとして解析を試みる
-            json_data = response.json()
-            print("レスポンスはJSON形式です:")
-            print(json.dumps(json_data, indent=2, ensure_ascii=False))
-            return json_data.get("image", [None])  # 例として最初の画像を返す
-        except json.JSONDecodeError:
-            # バイナリデータとして処理
-            content = response.content
-            print(f"レスポンスはバイナリデータです:")
-            print(f"データ長: {len(content)} bytes")
-            print(f"データ型: {type(content)}")
-            
-            # 先頭数バイトを16進数で表示
-            print("データの先頭20バイト:")
-            print(content[:20].hex())
-            
-            return content
+        return response.json().get("image", [None]) 
             
     except requests.exceptions.RequestException as e:
         print(f"APIへのリクエスト中にエラーが発生しました: {e}")
         return None
     
 
-def send_async_generation_request(
-    host,
-    params,
-    files = None
-):
+async def send_async_generation_request(client, host, params, files = None):
+
+    # リクエストのヘッダ設定
     headers = {
         "Accept": "application/json",
         "Authorization": f"Bearer {STABILITY_API_KEY}"
@@ -82,7 +73,7 @@ def send_async_generation_request(
 
     # Send request
     print(f"Sending REST request to {host}...")
-    response = requests.post(
+    response = await client.post(
         host,
         headers=headers,
         files=files,
@@ -97,29 +88,4 @@ def send_async_generation_request(
     # --------------------------------
     if not response.ok:
         raise Exception(f"HTTP {response.status_code}: {response.text}")
-
-    # Process async response
-    # generation_id = response_dict.get("id", None)
-    # assert generation_id is not None, "Expected id in response"
-
-    # Loop until result or timeout
-    timeout = int(os.getenv("WORKER_TIMEOUT", 500))
-    start = time.time()
-    status_code = 202
-    # while status_code == 202:
-        # print(f"Polling results at https://api.stability.ai/v2beta/results/{generation_id}")
-        # response = requests.get(
-            # f"https://api.stability.ai/v2beta/results/{generation_id}",
-            # headers={
-                # **headers,
-                # "Accept": "*/*"
-            # },
-        # )
-        # if not response.ok:
-            # raise Exception(f"HTTP {response.status_code}: {response.text}")
-        # status_code = response.status_code
-        # time.sleep(10)
-        # if time.time() - start > timeout:
-            # raise Exception(f"Timeout after {timeout} seconds")
-
     return response

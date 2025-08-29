@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 const server_url =
-    'https://do-or-doom-server.onrender.com/dialy'; // ここを適切なURLに変更
+    'https://do-or-doom-server-1.onrender.com/dialy'; // ここを適切なURLに変更
 
 void main() {
   runApp(const MyApp());
