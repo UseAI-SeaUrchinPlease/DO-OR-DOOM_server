@@ -27,7 +27,6 @@ async def get_image_by_SD(client, prompt: str):
         "Accept": "application/json",
         "Authorization": f"Bearer {STABILITY_API_KEY}"
     }
-    files = {}
     params = {
         "prompt" : prompt,
         "negative_prompt" : "",
@@ -40,7 +39,7 @@ async def get_image_by_SD(client, prompt: str):
     response = await client.post(
         txt2img_url,
         headers=headers,
-        data=params
+        files=params
     )
     response_dict = json.loads(response.text)
 
