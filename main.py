@@ -148,6 +148,7 @@ async def chat(request: Request):
     " - コアプロンプトとは、主に画像の中心に位置する被写体や中心的なテーマ、主題を指します。タスクにあるものを上げるといいでしょう" \
     "# スタイル" \
     " - 画風を決めます。文章に表された質感を表せるように、かつシンプルな単語にしてください" \
+    "生成するプロンプトは、具体的な「行動」を含めるようにしてください" \
     "作成するプロンプトは、絶対に英語のみにし、その他の言語は絶対に含まないでください" \
     "プロンプトに関しての説明は含まないでください" \
     "生成するプロンプトに「#コアプロンプト」や「#スタイル」などに分けず、英語の単語の羅列のみにしてください" \
@@ -155,9 +156,12 @@ async def chat(request: Request):
     async with httpx.AsyncClient() as client:
         pos_prompt = await generate_prompt(client, DIALY_SYSTEM_PROMPT_IMAGE, pos_text)
         print("Positive Prompt:", pos_prompt)
-    
+        
         neg_prompt = await generate_prompt(client, DIALY_SYSTEM_PROMPT_IMAGE, neg_text)
         print("Negative Prompt:", neg_prompt)
+
+        pos_prompt = "positive, active, " + pos_prompt
+        neg_prompt = "negative, inactive, " + neg_prompt
     
     # 画像を生成
     pos_image_base64 = get_image_by_SD(pos_prompt)

@@ -17,6 +17,7 @@ def get_image_by_SD(prompt):
     params = {
         "prompt" : prompt,
         "negative_prompt" : "",
+        "aspect_ratio" : "3:2",
         "output_format": "png"
     }
 
