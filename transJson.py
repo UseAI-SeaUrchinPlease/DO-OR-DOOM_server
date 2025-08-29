@@ -1,5 +1,3 @@
-import json
-
 def format_tasks_from_json(string) -> str:
     """
     Parses a JSON string, extracts task contents, and formats them.
@@ -27,19 +25,3 @@ def format_tasks_from_json(string) -> str:
     final_string = f"#タスク\n\t- {formatted_tasks}"
     
     return final_string
-
-def _get_content_from_response(data) -> dict:
-
-    choices = data.get("choices")
-    if isinstance(choices, list) and len(choices) > 0:
-        first = choices[0]
-        if isinstance(first, dict):
-            msg = first.get("message")
-            if isinstance(msg, dict):
-                contents = msg.get("content")
-
-    if contents is None:
-        # 取り出せなければ元のdataをそのまま返す（デバッグ用）
-        contents = data
-    
-    return {"reply": contents}

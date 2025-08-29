@@ -1,13 +1,7 @@
 import requests
 import json
 import os
-import time
-import base64
-from io import BytesIO
-from PIL import Image
 
-# BASE_URL = "https://9a755e97b8550f9e67.gradio.live"
-# TXT2IMG_URL = f"{BASE_URL}/sdapi/v1/txt2img"
 STABILITY_API_KEY = os.getenv("STABILITY_API_KEY") # APIキー
 
 
@@ -41,15 +35,6 @@ def get_image_by_SD(prompt):
 
             base64_image = json_data.get("image", [None])
             return base64_image
-            # if base64_image:
-                # base64をデコードしてバイトデータに変換
-                # image_bytes = base64.b64decode(base64_image)
-                # BytesIOオブジェクトに変換
-                # image_buffer = BytesIO(image_bytes)
-                # PIL Imageオブジェクトとして開く
-                # pil_image = Image.open(image_buffer)
-                # return pil_image
-            # return None 
 
         except json.JSONDecodeError:
             # バイナリデータとして処理
@@ -102,36 +87,7 @@ def send_async_generation_request(
     )
     response_dict = json.loads(response.text)
 
-    # --- デバッグのためのコードを追加 ---
-    # print("--- APIからの完全な応答 ---")
-    # print(json.dumps(response_dict, indent=2, ensure_ascii=False))
-    # print("---------------------------")
-    # --------------------------------
     if not response.ok:
         raise Exception(f"HTTP {response.status_code}: {response.text}")
-
-    # Process async response
-    # generation_id = response_dict.get("id", None)
-    # assert generation_id is not None, "Expected id in response"
-
-    # Loop until result or timeout
-    timeout = int(os.getenv("WORKER_TIMEOUT", 500))
-    start = time.time()
-    status_code = 202
-    # while status_code == 202:
-        # print(f"Polling results at https://api.stability.ai/v2beta/results/{generation_id}")
-        # response = requests.get(
-            # f"https://api.stability.ai/v2beta/results/{generation_id}",
-            # headers={
-                # **headers,
-                # "Accept": "*/*"
-            # },
-        # )
-        # if not response.ok:
-            # raise Exception(f"HTTP {response.status_code}: {response.text}")
-        # status_code = response.status_code
-        # time.sleep(10)
-        # if time.time() - start > timeout:
-            # raise Exception(f"Timeout after {timeout} seconds")
 
     return response
