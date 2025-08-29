@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from transJson import format_tasks_from_json, _get_content_from_response, truncate_dict_values
 from SDImage import get_image_by_SD
-from makeSentence import make_dialy_sentence, generate_prompt
+from makeSentence import make_dialy_sentence, generate_dialy_prompt, make_badge_name, make_badge_sentence, generate_badge_prompt
 
 
 load_dotenv()
@@ -61,8 +61,8 @@ async def make_dialy(request: Request):
         # 画像生成プロンプトを生成（並列で実行）
         # asyncio.gatherで2つのタスクを並列実行し、両方の完了を待つ
         pos_prompt, neg_prompt = await asyncio.gather(
-            generate_prompt(client, pos_text), 
-            generate_prompt(client, neg_text))
+            generate_dialy_prompt(client, pos_text), 
+            generate_dialy_prompt(client, neg_text))
 
         # 生成したプロンプトを出力(ログに表示)
         print("Positive Prompt:", pos_prompt)
@@ -93,3 +93,44 @@ async def make_dialy(request: Request):
     print("Response JSON:", dialies_json)
 
     return dialies
+
+### バッジ生成用エンドポイント ###
+@app.post("/badge")
+async def make_badge(request: Request):
+    # リクエストボディをJSONとして取得
+    body = await request.json()
+    # JSONからタスクを抽出し、フォーマット
+    tasks = format_tasks_from_json(body)
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        # 文章と名前を生成
+        name = await make_badge_name(client, tasks)
+        text = await make_badge_sentence(client, tasks, True)
+
+    prompt = None
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        # 画像生成プロンプトを生成
+        prompt = await generate_badge_prompt(client, text)
+
+        # 生成したプロンプトを出力(ログに表示)
+        print("Badge Prompt:", prompt)
+
+        prompt = "badge, icon, " + prompt
+
+    # 画像を生成 (base64形式で返されるのでそのまま)
+    image_base64 = get_image_by_SD(prompt)
+
+    # レスポンス用の辞書を作成
+    badge = {
+        "name": name,
+        "text": text,
+        "image": image_base64,
+    }
+
+    # デバッグ用ログを見やすくするためにバリューを省略
+    badge_copy = copy.deepcopy(badge)
+    badge_truncated = truncate_dict_values(badge_copy, 30)
+    badge_json = json.dumps(badge_truncated, ensure_ascii=False)
+    print("Response JSON:", badge_json)
+
+    return badge
