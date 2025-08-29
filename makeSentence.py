@@ -1,7 +1,5 @@
 import httpx
 import os
-import io
-import base64
 import re
 from dotenv import load_dotenv
 
