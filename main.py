@@ -115,7 +115,7 @@ async def make_badge(request: Request):
         # 生成したプロンプトを出力(ログに表示)
         print("Badge Prompt:", prompt)
 
-        prompt = "badge, icon, square" + prompt
+        prompt = "badge, icon" + prompt
 
     # 画像を生成 (base64形式で返されるのでそのまま)
     image_base64 = get_image_by_SD(prompt)
