@@ -167,7 +167,7 @@ async def generate_dialy_prompt(client, text: str, max_retries=3):
         
     
     # 全てのリトライが失敗した場合、デフォルトの英語プロンプトを返す
-    return "person standing nature simple photo"
+    # return "person standing nature simple photo"
 
 # 英語のみの文字列にフォーマットする関数
 def format_to_allowed_chars(text: str) -> str:
@@ -305,11 +305,14 @@ async def generate_badge_prompt(client, text: str, max_retries=3):
         )
         
         prompt = _get_content_from_response(response.json()).get("reply")
-        if is_english_only(prompt):
-            return prompt
-        print(f"prompt:{prompt}")
-        print(f"非英語文字を検出。リトライ {attempt + 1}/{max_retries}")
+
+        return format_to_allowed_chars(prompt)
+        # prompt = _get_content_from_response(response.json()).get("reply")
+        # if is_english_only(prompt):
+            # return prompt
+        # print(f"prompt:{prompt}")
+        # print(f"非英語文字を検出。リトライ {attempt + 1}/{max_retries}")
         
     
     # 全てのリトライが失敗した場合、デフォルトの英語プロンプトを返す
-    return "person standing nature simple photo"
+    # return "person standing nature simple photo"
