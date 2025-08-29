@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 import asyncio
 import httpx
 import os
+import json
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -84,4 +85,8 @@ async def make_dialy(request: Request):
             "image": neg_image_base64,
         }
     }
+
+    dialies_json = json.dumps(dialies, ensure_ascii=False)
+    print("Response JSON:", dialies_json)
+
     return dialies
