@@ -3,6 +3,7 @@ import asyncio
 import httpx
 import os
 import json
+import copy
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -86,7 +87,7 @@ async def make_dialy(request: Request):
     }
 
     # デバッグ用ログを見やすくするためにバリューを省略
-    dialies_copy = dialies.copy()
+    dialies_copy = copy.deepcopy(dialies)
     dialies_truncated = truncate_dict_values(dialies_copy, 30)
     dialies_json = json.dumps(dialies_truncated, ensure_ascii=False)
     print("Response JSON:", dialies_json)
