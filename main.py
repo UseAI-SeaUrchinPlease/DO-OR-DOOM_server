@@ -6,7 +6,7 @@ import json
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
-from transJson import format_tasks_from_json
+from transJson import format_tasks_from_json, _get_content_from_response
 from SDImage import get_image_by_SD
 from makeSentence import make_dialy_sentence, generate_prompt
 
