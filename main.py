@@ -6,7 +6,7 @@ import json
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
-from transJson import format_tasks_from_json, _get_content_from_response
+from transJson import format_tasks_from_json, _get_content_from_response, truncate_dict_values
 from SDImage import get_image_by_SD
 from makeSentence import make_dialy_sentence, generate_prompt
 
@@ -85,7 +85,9 @@ async def make_dialy(request: Request):
         }
     }
 
-    dialies_json = json.dumps(dialies, ensure_ascii=False)
+    # デバッグ用ログを見やすくするためにバリューを省略
+    dialies_truncated = truncate_dict_values(dialies, 30)
+    dialies_json = json.dumps(dialies_truncated, ensure_ascii=False)
     print("Response JSON:", dialies_json)
 
     return dialies

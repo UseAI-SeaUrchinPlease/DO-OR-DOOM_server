@@ -40,3 +40,23 @@ def _get_content_from_response(data) -> dict:
         contents = data
     
     return {"reply": contents}
+
+
+def truncate_dict_values(d, max_len):
+    """
+    辞書内の文字列の値を再帰的に切り詰める関数
+    """
+    for key, value in d.items():
+        if isinstance(value, str) and len(value) > max_len:
+            d[key] = value[:max_len] + "..."
+        elif isinstance(value, dict):
+            # 値が辞書の場合は再帰的に処理
+            truncate_dict_values(value, max_len)
+        elif isinstance(value, list):
+            # 値がリストの場合は各要素を処理
+            for i, item in enumerate(value):
+                if isinstance(item, str) and len(item) > max_len:
+                    value[i] = item[:max_len] + "..."
+                elif isinstance(item, dict):
+                    truncate_dict_values(item, max_len)
+    return d
