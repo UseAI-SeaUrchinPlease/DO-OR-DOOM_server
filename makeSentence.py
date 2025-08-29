@@ -158,14 +158,34 @@ async def generate_dialy_prompt(client, text: str, max_retries=3):
         )
         
         prompt = _get_content_from_response(response.json()).get("reply")
-        if is_english_only(prompt):
-            return prompt
-        print(f"prompt:{prompt}")
-        print(f"非英語文字を検出。リトライ {attempt + 1}/{max_retries}")
+
+        return format_to_allowed_chars(prompt)
+        # if is_english_only(prompt):
+            # return prompt
+        # print(f"prompt:{prompt}")
+        # poprint(f"非英語文字を検出。リトライ {attempt + 1}/{max_retries}")
         
     
     # 全てのリトライが失敗した場合、デフォルトの英語プロンプトを返す
     return "person standing nature simple photo"
+
+# 英語のみの文字列にフォーマットする関数
+def format_to_allowed_chars(text: str) -> str:
+    """テキストを許可された文字のみに再構成する関数
+
+    Args:
+        text (str): 入力テキスト
+
+    Returns:
+        str: 許可された文字のみで構成されたテキスト
+    """
+    # 許可する文字のパターン
+    allowed_pattern = re.compile(r'[^a-zA-Z0-9\s,\.\-]')
+    # 許可されない文字を空文字に置換
+    formatted_text = allowed_pattern.sub('', text)
+    # 連続する空白を1つに置換
+    formatted_text = ' '.join(formatted_text.split())
+    return formatted_text
 
 # 英語チェック関数
 def is_english_only(text):
