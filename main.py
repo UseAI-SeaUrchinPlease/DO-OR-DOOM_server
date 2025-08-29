@@ -45,7 +45,7 @@ async def make_dialy(request: Request):
     # JSONからタスクを抽出し、フォーマット
     tasks = format_tasks_from_json(body)
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         # 文章を生成（並列で実行）
         # asyncio.gatherで2つのタスクを並列実行し、両方の完了を待つ
         pos_text, neg_text = await asyncio.gather(
@@ -56,7 +56,7 @@ async def make_dialy(request: Request):
     pos_image_base64 = None
     neg_image_base64 = None
     
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         # 画像生成プロンプトを生成（並列で実行）
         # asyncio.gatherで2つのタスクを並列実行し、両方の完了を待つ
         pos_prompt, neg_prompt = await asyncio.gather(
