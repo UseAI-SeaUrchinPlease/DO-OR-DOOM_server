@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
 from transJson import format_tasks_from_json, _get_content_from_response 
-from SDImage import get_image_by_SD
+from SDImage import get_image_by_SD_async
 from makeSentence import make_dialy_sentence, generate_prompt
 
 
@@ -73,8 +73,8 @@ async def make_dialy(request: Request):
         # 画像を生成 (base64形式で返されるので、そのまま)(並列処理)
         # asyncio.gatherで2つのタスクを並列実行し、両方の完了を待つ
         pos_image_base64, neg_image_base64 = await asyncio.gather(
-            get_image_by_SD(client, pos_prompt),
-            get_image_by_SD(client, neg_prompt)
+            get_image_by_SD_async(client, pos_prompt),
+            get_image_by_SD_async(client, neg_prompt)
         )
 
     # レスポンス用の辞書を作成

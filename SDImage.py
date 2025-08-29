@@ -1,15 +1,100 @@
 import requests
 import json
-import base64
-from PIL import Image
-import io
 import os
-import time
+import aiohttp
 
 # BASE_URL = "https://9a755e97b8550f9e67.gradio.live"
 # TXT2IMG_URL = f"{BASE_URL}/sdapi/v1/txt2img"
 STABILITY_API_KEY = os.getenv("STABILITY_API_KEY") # APIキー
 
+
+async def send_generation_request_async(session, host, params):
+    """
+    aiohttpを使用して非同期でAPIにリクエストを送信するヘルパー関数。
+    """
+    headers = {
+        "Accept": "application/json",
+        "Authorization": f"Bearer {STABILITY_API_KEY}"
+    }
+
+    # multipart/form-data形式でデータを送信するためにFormDataオブジェクトを使用
+    form_data = aiohttp.FormData()
+    for key, value in params.items():
+        form_data.add_field(key, str(value))
+
+    print(f"Sending async REST request to {host}...")
+    
+    # aiohttp.ClientSession.postを使用して非同期にPOSTリクエストを送信
+    response = await session.post(
+        host,
+        headers=headers,
+        data=form_data
+    )
+    
+    # 応答ヘッダーとステータスコードをすぐに確認
+    print("--- APIからの応答ヘッダー ---")
+    print(f"Status: {response.status}")
+    print(f"Content-Type: {response.headers.get('content-type')}")
+    print("---------------------------")
+
+    if not response.ok:
+        # エラーレスポンスも非同期で読み取る
+        error_text = await response.text()
+        raise Exception(f"HTTP {response.status}: {error_text}")
+    
+    return response
+
+
+async def get_image_by_SD_async(prompt):
+    """
+    Stability AI APIを非同期で呼び出し、画像データを取得するメイン関数。
+    """
+    txt2img_url = "https://api.stability.ai/v2beta/stable-image/generate/ultra"
+    params = {
+        "prompt": prompt,
+        "negative_prompt": "",
+        "aspect_ratio": "3:2",
+        "output_format": "png"
+    }
+
+    # aiohttp.ClientSessionを非同期コンテキストマネージャとして使用
+    async with aiohttp.ClientSession() as session:
+        try:
+            print("画像生成リクエストを送信します...")
+            # ヘルパー関数をawaitで呼び出す
+            response = await send_generation_request_async(
+                session,
+                txt2img_url,
+                params
+            )
+
+            # レスポンスを非同期で処理
+            # ヘッダーを見てJSONかバイナリかを判断するのがより堅牢
+            if response.headers.get('content-type') == 'application/json':
+                # JSONとして非同期に解析
+                json_data = await response.json()
+                print("レスポンスはJSON形式です:")
+                print(json.dumps(json_data, indent=2, ensure_ascii=False))
+                return json_data # エラーメッセージなどが含まれる場合
+            else:
+                # バイナリデータ（画像）として非同期に読み込む
+                content = await response.read()
+                print("レスポンスはバイナリデータです:")
+                print(f"データ長: {len(content)} bytes")
+                print(f"データ型: {type(content)}")
+                
+                # 先頭数バイトを16進数で表示
+                print("データの先頭20バイト:")
+                print(content[:20].hex())
+                
+                return content
+                
+        except aiohttp.ClientError as e:
+            print(f"APIへのリクエスト中にエラーが発生しました: {e}")
+            return None
+        except Exception as e:
+            print(f"予期せぬエラーが発生しました: {e}")
+            return None
     
 
 
