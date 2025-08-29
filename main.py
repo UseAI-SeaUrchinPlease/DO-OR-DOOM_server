@@ -105,7 +105,7 @@ async def make_badge(request: Request):
     async with httpx.AsyncClient(timeout=30.0) as client:
         # 文章と名前を生成
         name = await make_badge_name(client, tasks)
-        text = await make_badge_sentence(client, tasks, True)
+        text = await make_badge_sentence(client, tasks)
 
     prompt = None
     async with httpx.AsyncClient(timeout=30.0) as client:
