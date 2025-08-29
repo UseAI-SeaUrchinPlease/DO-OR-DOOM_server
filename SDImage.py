@@ -27,8 +27,7 @@ async def get_image_by_SD(client, prompt: str):
         "Accept": "application/json",
         "Authorization": f"Bearer {STABILITY_API_KEY}"
     }
-    if files is None:
-        files = {}
+    files = {}
     params = {
         "prompt" : prompt,
         "negative_prompt" : "",
