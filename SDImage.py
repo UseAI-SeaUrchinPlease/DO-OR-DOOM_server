@@ -23,31 +23,55 @@ async def get_image_by_SD(client, prompt: str):
     """
 
     txt2img_url = f"https://api.stability.ai/v2beta/stable-image/generate/ultra"
+    headers = {
+        "Accept": "application/json",
+        "Authorization": f"Bearer {STABILITY_API_KEY}"
+    }
+    if files is None:
+        files = {}
     params = {
         "prompt" : prompt,
         "negative_prompt" : "",
         "aspect_ratio" : "3:2",
         "output_format": "png"
     }
+    
+    # Send request
+    print(f"Sending REST request to {txt2img_url}...")
+    response = await client.post(
+        txt2img_url,
+        headers=headers,
+        files=files,
+        data=params
+    )
+    response_dict = json.loads(response.text)
+
+    # --- デバッグのためのコードを追加 ---
+    print("--- APIからの完全な応答 ---")
+    print(json.dumps(response_dict, indent=2, ensure_ascii=False))
+    print("---------------------------")
+    # --------------------------------
+    if not response.ok:
+        raise Exception(f"HTTP {response.status_code}: {response.text}")
 
     # 3. APIにPOSTリクエストを送信
-    try:
-        print("画像生成リクエストを送信します...")
-        response = send_async_generation_request(
-            client,
-            txt2img_url,
-            params
-        )
+    # try:
+        # print("画像生成リクエストを送信します...")
+        # response = send_async_generation_request(
+            # client,
+            # txt2img_url,
+            # params
+        # )
         
         # レスポンスの検証
-        print(f"Content-Type: {response.headers.get('content-type', 'Not specified')}")
-        print(f"Response status code: {response.status_code}")
-        
-        return response.json().get("image", [None]) 
+        # print(f"Content-Type: {response.headers.get('content-type', 'Not specified')}")
+        # print(f"Response status code: {response.status_code}")
+        # 
+    return response.json().get("image", [None]) 
             
-    except requests.exceptions.RequestException as e:
-        print(f"APIへのリクエスト中にエラーが発生しました: {e}")
-        return None
+    # except requests.exceptions.RequestException as e:
+        # print(f"APIへのリクエスト中にエラーが発生しました: {e}")
+        # return None
     
 
 async def send_async_generation_request(client, host, params, files = None):
